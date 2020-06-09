@@ -1,0 +1,18 @@
+#include "DEF-files/SHMS/PRODUCTION/RASTER/praster_histos_mkj.def"
+block T.*
+block P.rb.raster.*
+block P.extcor.*
+block P.dc.x_fp
+block P.dc.xp_fp
+block P.dc.y_fp
+block P.dc.yp_fp
+block P.dc.ntrack
+block P.ngcer.npeSum
+block P.cal.etottracknorm
+block P.gtr.*
+block P.kin.*
+block P.react.x
+block P.react.y
+block P.react.z
+#block P.hod.*.*AdcCounter
+
