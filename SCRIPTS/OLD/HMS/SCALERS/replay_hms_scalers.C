@@ -97,7 +97,7 @@ void replay_hms_scalers(Int_t RunNumber=0, Int_t MaxEvent=0) {
   // Define output ROOT file
   analyzer->SetOutFile(ROOTFileName.Data());
   // Define DEF-file
-  analyzer->SetOdefFile("DEF-files/HMS/EPICS/epics_short.def");
+  analyzer->SetOdefFile("DEF-files/HMS/EPICS/epics.def");
   // Define cuts file
   analyzer->SetCutFile("DEF-files/HMS/SCALERS/hscaler_cuts.def");  // optional
   // File to record accounting information for cuts

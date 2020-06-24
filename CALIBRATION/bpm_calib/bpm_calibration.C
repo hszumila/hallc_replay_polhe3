@@ -12,7 +12,8 @@
 
 void
 bpm_calibration(const char* finname  = "harp_info.txt"){
-  
+
+  Double_t hmin=-4.,hmax=4.;  
   
   gStyle->SetOptStat(0);
   gStyle->SetOptStat(0);
@@ -68,7 +69,7 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     
   }else{
     while(!infile.eof()){
-      infile >> c1 >> c2 >> c3 >> c4 >> c5 >> c6 >> c7 >> c8 >> c9 >> c10 >> c11 >> c12 >> c13 >> c14 ;
+      infile >> c1 >> c2 >> c3 >> c4 >> c5 >> c6 >> c7 >> c8>> c9>> c10>> c11>> c12;
       shms_run_NUM.push_back(c1);
       hAx.push_back(c2);
       hAy.push_back(c3);
@@ -76,13 +77,13 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
       hBy.push_back(c5);
       hAz.push_back(c6);
       hBz.push_back(c7);
-      bpmAx1.push_back(c8);
-      bpmAy1.push_back(c9);
-      bpmBx1.push_back(c10);
-      bpmBy1.push_back(c11);
-      bpmCx1.push_back(c12);
-      bpmCy1.push_back(c13);
-      herr.push_back(c14);
+      herr.push_back(c8);
+      bpmAx1.push_back(c9);
+     bpmBx1.push_back(0.0);
+      bpmCx1.push_back(c10);
+      bpmAy1.push_back(c11);
+      bpmBy1.push_back(0.0);
+      bpmCy1.push_back(c12);
     }
   }
   shms_run_NUM.pop_back();
@@ -92,13 +93,13 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
   hBy.pop_back();
   hAz.pop_back();
   hBz.pop_back();  
-  bpmAx1.pop_back();
-  bpmAy1.pop_back();
-  bpmBx1.pop_back();
-  bpmBy1.pop_back();
-  bpmCx1.pop_back();
-  bpmCy1.pop_back();
   herr.pop_back();
+  bpmAx1.pop_back();
+  bpmBx1.pop_back();
+  bpmCx1.pop_back();
+  bpmAy1.pop_back();
+  bpmBy1.pop_back();
+      bpmCy1.pop_back();
 
   cout << shms_run_NUM.size() << endl;   
   
@@ -125,85 +126,18 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
   
   TCanvas *cmean = new TCanvas("cmean","Mean BPM Fits", 1800, 1200);
   cmean ->Divide(6,size);
-  TCanvas *cmeanr = new TCanvas("cmeanr","Mean Raster Fits", 1800, 1200);
-  cmeanr ->Divide(4,size);
   TCanvas *cmean2 = new TCanvas("cmean2","Mean BPM Fits", 1800, 1200);
   cmean2 ->Divide(6,size);
+    TString file_format="../../ROOTfiles/hms_replay_scalers_%d_-1.root";
 
-  for (UInt_t irr = 0; irr < hAx.size(); irr ++){  //Loop over raster runs starts here
-
-    errr[irr] =0.0;
-    
-   
-    //TFile *f = new TFile(Form("../hallc_replay/ROOTfiles/shms_replay_raster_simple_%d_-1.root",shms_run_NUM[ir]),"READ"); // %d : expects integer; %f expects float 
-    
-    TString file_format=gSystem->GetFromPipe("echo $hallc_replay_dir")+"/ROOTfiles/shms_replay_raster_simple_%d_-1.root";
-    TFile *f = new TFile(Form(file_format,shms_run_NUM[irr]),"READ"); // %d : expects integer; %f expects float 
-    TTree *T = (TTree*)f->Get("T");
-    Int_t totev = T->GetEntries(); 
-    //Read the branch for the raster positions from the event TREE 
-    T->SetBranchAddress("ibcm1",&ibcm1r);
-    T->SetBranchAddress("FRXApos",&rasterAxpos);
-    T->SetBranchAddress("FRXBpos",&rasterBxpos);
-    T->SetBranchAddress("FRYApos",&rasterAypos);
-    T->SetBranchAddress("FRYBpos",&rasterBypos);
-    //Creating the histogram of the raster positions and 
-    TH1F* hrasterAxpos =new TH1F("rasterAxpos","rasterAxpos",100,-3,3);
-    TH1F* hrasterAypos =new TH1F("rasterAypos","rasterAypos",100,-3,3);
-    TH1F* hrasterBxpos =new TH1F("rasterBxpos","rasterBxpos",100,-3,3);
-    TH1F* hrasterBypos =new TH1F("rasterBypos","rasterBypos",100,-3,3);
-    // Fill Histograms here filling the Raster positions histograms   
-    for (Int_t iev = 0 ; iev < totev ;iev ++){
-      T->GetEntry(iev);
-      if (ibcm1r>1){
-	hrasterAxpos ->Fill(10.0*rasterAxpos);
-	hrasterAypos ->Fill(10.0*rasterAypos);
-	hrasterBxpos ->Fill(10.0*rasterBxpos);
-	hrasterBypos ->Fill(10.0*rasterBypos);
-      }
-    }
-    
-    // TF1 *fit1 = (TF1 *)hbpmAxpos->GetFunction("gaus");
-    // Double_t parameter0 = fit1->GetParameter(0);
-    //cout << "parameter0 :"<<parameter0 << endl;
-    
-    cmeanr->cd(4*irr+1);
-    hrasterAxpos->Draw();
-    cmeanr->cd(4*irr+2);
-    hrasterAypos->Draw();
-    cmeanr->cd(4*irr+3);
-    hrasterBxpos->Draw();
-    cmeanr->cd(4*irr+4);
-    hrasterBypos->Draw();
-  
-    cout <<" check raster" << endl; 
-
-
-    rasterAxposmean[irr] = hrasterAxpos->GetMean();
-    rasterAxposmeanErr[irr] = hrasterAxpos->GetRMS();
-    cout <<"mean of x of raster A :" << rasterAxposmean[irr] << endl;
-    rasterAyposmean[irr] = hrasterAypos->GetMean();
-    rasterAyposmeanErr[irr] = hrasterAypos->GetRMS();
-    cout <<"mean of y of raster A :" << rasterAyposmean[irr] << endl;
-    rasterBxposmean[irr] = hrasterBxpos->GetMean();
-    rasterBxposmeanErr[irr] = hrasterBxpos->GetRMS();
-    cout <<"mean of x of raster B :" << rasterBxposmean[irr] << endl;
-    rasterByposmean[irr] = hrasterBypos->GetMean();
-    rasterByposmeanErr[irr] = hrasterBypos->GetRMS();
-    cout <<"mean of y of raster B :" << rasterByposmean[irr] << endl;
-   
-    cout << "******* ok raster*****" << endl;
-    
-  } // Loop over raster run ends here
-
+ 
   for (UInt_t ir = 0; ir < hAx.size(); ir ++){  //Loop over runs starts here
 
-    err[ir] =0.0;
+    err[ir] =0.0001;
     
    
     //TFile *f = new TFile(Form("../hallc_replay/ROOTfiles/shms_replay_raster_simple_%d_-1.root",shms_run_NUM[ir]),"READ"); // %d : expects integer; %f expects float 
-    
-    TString file_format=gSystem->GetFromPipe("echo $hallc_replay_dir")+"/ROOTfiles/shms_replay_raster_simple_%d_-1.root";
+    cout << " run = " << shms_run_NUM[ir] << endl;
     TFile *f = new TFile(Form(file_format,shms_run_NUM[ir]),"READ"); // %d : expects integer; %f expects float 
     TTree *T = (TTree*)f->Get("E");
     Int_t totev = T->GetEntries(); 
@@ -216,12 +150,12 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     T->SetBranchAddress("IPM3H07C.XRAW",&bpmCxpos);
     T->SetBranchAddress("IPM3H07C.YRAW",&bpmCypos); 
     //Creating the histogram of the BPM positions and 
-    TH1F* hbpmAxpos =new TH1F("bpmAxpos","bpmAxpos",100,-3,3);
-    TH1F* hbpmAypos =new TH1F("bpmAypos","bpmAypos",100,-3,3);
-    TH1F* hbpmBxpos =new TH1F("bpmBxpos","bpmBxpos",100,-3,3);
-    TH1F* hbpmBypos =new TH1F("bpmBypos","bpmBypos",100,-3,3);
-    TH1F* hbpmCxpos =new TH1F("bpmCxpos","bpmCxpos",100,-3,3);
-    TH1F* hbpmCypos =new TH1F("bpmCypos","bpmCypos",100,-3,3);
+    TH1F* hbpmAxpos =new TH1F("bpmAxpos","bpmAxpos",100,hmin,hmax);
+    TH1F* hbpmAypos =new TH1F("bpmAypos","bpmAypos",100,hmin,hmax);
+    TH1F* hbpmBxpos =new TH1F("bpmBxpos","bpmBxpos",100,hmin,hmax);
+    TH1F* hbpmBypos =new TH1F("bpmBypos","bpmBypos",100,hmin,hmax);
+    TH1F* hbpmCxpos =new TH1F("bpmCxpos","bpmCxpos",100,hmin,hmax);
+    TH1F* hbpmCypos =new TH1F("bpmCypos","bpmCypos",100,hmin,hmax);
     // Fill Histograms here filling the BPM positions histograms   
     for (Int_t iev = 0 ; iev < totev ;iev ++){
       T->GetEntry(iev);
@@ -265,27 +199,27 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     //bpmAxposmean[ir] = hbpmAxpos->GetFunction("gaus")->GetParameter(1);
     bpmAxposmean[ir] = hbpmAxpos->GetMean();
     bpmAxposmeanErr[ir] = hbpmAxpos->GetRMS();
-    cout <<"mean of x of bpm A :" << bpmAxposmean[ir] << endl;
+    cout <<"mean of x of bpm A :" << bpmAxposmean[ir] << " " << bpmAx1[ir] << endl;
     //bpmAyposmean[ir] = hbpmAypos->GetFunction("gaus")->GetParameter(1);
     bpmAyposmean[ir] = hbpmAypos->GetMean();
     bpmAyposmeanErr[ir] = hbpmAypos->GetRMS();
-    cout <<"mean of y of bpm A :" << bpmAyposmean[ir] << endl;
+    cout <<"mean of y of bpm A :" << bpmAyposmean[ir]  << " " << bpmAy1[ir]<< endl;
     //bpmBxposmean[ir]= hbpmBxpos->GetFunction("gaus")->GetParameter(1);
     bpmBxposmean[ir] = hbpmBxpos->GetMean();
     bpmBxposmeanErr[ir] = hbpmBxpos->GetRMS();
-    cout <<"mean of x of bpm B :" << bpmBxposmean[ir] << endl;
+    cout <<"mean of x of bpm B :" << bpmBxposmean[ir]  << " " << bpmBx1[ir]<< endl;
     //bpmByposmean[ir] = hbpmBypos->GetFunction("gaus")->GetParameter(1);
     bpmByposmean[ir] = hbpmBypos->GetMean();
     bpmByposmeanErr[ir] = hbpmBypos->GetRMS();
-    cout <<"mean of y of bpm B :" << bpmByposmean[ir] << endl;
+    cout <<"mean of y of bpm B :" << bpmByposmean[ir]  << " " << bpmBy1[ir]<< endl;
     //bpmCxposmean[ir] = hbpmCxpos->GetFunction("gaus")->GetParameter(1);
     bpmCxposmean[ir] = hbpmCxpos->GetMean();
     bpmCxposmeanErr[ir] = hbpmCxpos->GetRMS();
-    cout <<"mean of x of bpm C :" << bpmCxposmean[ir] << endl;
+    cout <<"mean of x of bpm C :" << bpmCxposmean[ir] << " " << bpmCx1[ir] << endl;
     //bpmCyposmean[ir] = hbpmCypos->GetFunction("gaus")->GetParameter(1);
     bpmCyposmean[ir] = hbpmCypos->GetMean();
     bpmCyposmeanErr[ir] = hbpmCypos->GetRMS();
-    cout <<"mean of y of bpm C :" << bpmCyposmean[ir] << endl;
+    cout <<"mean of y of bpm C :" << bpmCyposmean[ir] << " " << bpmCy1[ir] << endl;
     
     cout << "******* ok *****" << endl;
     
@@ -294,12 +228,11 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
   
   for (UInt_t ir = 0; ir < hAx.size(); ir ++){  //Second Loop over runs starts here
 
-    err[ir] =0.0;
+    err[ir] =0.0001;
     
    
     //TFile *f = new TFile(Form("../hallc_replay/ROOTfiles/shms_replay_raster_simple_%d_-1.root",shms_run_NUM[ir]),"READ"); // %d : expects integer; %f expects float 
     
-    TString file_format=gSystem->GetFromPipe("echo $hallc_replay_dir")+"/ROOTfiles/shms_replay_raster_simple_%d_-1.root";
     TFile *f = new TFile(Form(file_format,shms_run_NUM[ir]),"READ"); // %d : expects integer; %f expects float 
     TTree *T = (TTree*)f->Get("E");
     Int_t totev = T->GetEntries(); 
@@ -312,12 +245,12 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     T->SetBranchAddress("IPM3H07C.XRAW",&bpmCxpos);
     T->SetBranchAddress("IPM3H07C.YRAW",&bpmCypos); 
     //Creating the histogram of the BPM positions and 
-    TH1F* hbpmAxposc =new TH1F("bpmAxposc","bpmAxposc",100,-3,3);
-    TH1F* hbpmAyposc =new TH1F("bpmAyposc","bpmAyposc",100,-3,3);
-    TH1F* hbpmBxposc =new TH1F("bpmBxposc","bpmBxposc",100,-3,3);
-    TH1F* hbpmByposc =new TH1F("bpmByposc","bpmByposc",100,-3,3);
-    TH1F* hbpmCxposc =new TH1F("bpmCxposc","bpmCxposc",100,-3,3);
-    TH1F* hbpmCyposc =new TH1F("bpmCyposc","bpmCyposc",100,-3,3);
+    TH1F* hbpmAxposc =new TH1F("bpmAxposc","bpmAxposc",100,hmin,hmax);
+    TH1F* hbpmAyposc =new TH1F("bpmAyposc","bpmAyposc",100,hmin,hmax);
+    TH1F* hbpmBxposc =new TH1F("bpmBxposc","bpmBxposc",100,hmin,hmax);
+    TH1F* hbpmByposc =new TH1F("bpmByposc","bpmByposc",100,hmin,hmax);
+    TH1F* hbpmCxposc =new TH1F("bpmCxposc","bpmCxposc",100,hmin,hmax);
+    TH1F* hbpmCyposc =new TH1F("bpmCyposc","bpmCyposc",100,hmin,hmax);
     // Fill Histograms here filling the BPM positions histograms   
     for (Int_t iev = 0 ; iev < totev ;iev ++){
       T->GetEntry(iev);
@@ -354,34 +287,34 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     //hbpmCypos->Fit("gaus");
     hbpmCyposc->Draw();
   
-    cout <<" check " << endl; 
+    cout <<" check with tighter cut " << endl; 
 
 
     //parameter(1) = mean of the gaussian functions   
     //bpmAxposmean[ir] = hbpmAxpos->GetFunction("gaus")->GetParameter(1);
     bpmAxposmeanc[ir] = hbpmAxposc->GetMean();
     bpmAxposmeancErr[ir] = hbpmAxposc->GetRMS()/sqrt(hbpmAxposc->GetEntries());
-    cout <<"mean of x of bpm A :" << bpmAxposmeanc[ir] << endl;
+    cout <<"mean of x of bpm A :" << bpmAxposmeanc[ir]  << " " << bpmAx1[ir] << endl;
     //bpmAyposmean[ir] = hbpmAypos->GetFunction("gaus")->GetParameter(1);
     bpmAyposmeanc[ir] = hbpmAyposc->GetMean();
     bpmAyposmeancErr[ir] = hbpmAyposc->GetRMS()/sqrt(hbpmAyposc->GetEntries());
-    cout <<"mean of y of bpm A :" << bpmAyposmeanc[ir] << endl;
+    cout <<"mean of y of bpm A :" << bpmAyposmeanc[ir]  << " " << bpmAy1[ir]<< endl;
     //bpmBxposmean[ir]= hbpmBxpos->GetFunction("gaus")->GetParameter(1);
     bpmBxposmeanc[ir] = hbpmBxposc->GetMean();
     bpmBxposmeancErr[ir] = hbpmBxposc->GetRMS()/sqrt(hbpmBxposc->GetEntries());
-    cout <<"mean of x of bpm B :" << bpmBxposmeanc[ir] << endl;
+    cout <<"mean of x of bpm B :" << bpmBxposmeanc[ir]  << " " << bpmBx1[ir]<< endl;
     //bpmByposmean[ir] = hbpmBypos->GetFunction("gaus")->GetParameter(1);
     bpmByposmeanc[ir] = hbpmByposc->GetMean();
     bpmByposmeancErr[ir] = hbpmByposc->GetRMS()/sqrt(hbpmByposc->GetEntries());
-    cout <<"mean of y of bpm B :" << bpmByposmeanc[ir] << endl;
+    cout <<"mean of y of bpm B :" << bpmByposmeanc[ir]  << " " << bpmBy1[ir]<< endl;
     //bpmCxposmean[ir] = hbpmCxpos->GetFunction("gaus")->GetParameter(1);
     bpmCxposmeanc[ir] = hbpmCxposc->GetMean();
     bpmCxposmeancErr[ir] = hbpmCxposc->GetRMS()/sqrt(hbpmCxposc->GetEntries());
-    cout <<"mean of x of bpm C :" << bpmCxposmeanc[ir] << endl;
+    cout <<"mean of x of bpm C :" << bpmCxposmeanc[ir]  << " " << bpmCx1[ir]<< endl;
     //bpmCyposmean[ir] = hbpmCypos->GetFunction("gaus")->GetParameter(1);
     bpmCyposmeanc[ir] = hbpmCyposc->GetMean();
     bpmCyposmeancErr[ir] = hbpmCyposc->GetRMS()/sqrt(hbpmCyposc->GetEntries());
-    cout <<"mean of y of bpm C :" << bpmCyposmeanc[ir] << endl;
+    cout <<"mean of y of bpm C :" << bpmCyposmeanc[ir]  << " " << bpmCy1[ir]<< endl;
     
     cout << "******* ok *****" << endl;
   }  
@@ -398,6 +331,7 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
   std:: vector<Double_t> hxerr0(size), hxerr1(size);
   std:: vector<Double_t> hyerr0(size), hyerr1(size);
 
+ 
   Double_t ssize = sqrt(size);
   Int_t isize = ssize;
   Int_t jsize;
@@ -425,19 +359,19 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     TGraphErrors *gr2 = new TGraphErrors(2,&hz1[0],&hx1[0],&err[0],&herr[0]);
     gr2->SetTitle("HAX vs HAZ ; HARP Z  ; HARP X");
     gr2->GetXaxis()->SetLimits(0.0,500.0);
-    gr2->GetYaxis()->SetRangeUser(-3.0,3.0);
+    gr2->GetYaxis()->SetRangeUser(hmin,hmax);
     gr2->GetXaxis()->CenterTitle();
     gr2->GetYaxis()->CenterTitle();
     gr2->SetMarkerSize(0.95);
     gr2->SetMarkerStyle(20);
     gr2->SetMarkerColor(2);
     gr2->Draw("ape");
-    gr2->Fit("pol1");
+    gr2->Fit("pol1","Q");
     q0[i] = gr2->GetFunction("pol1")->GetParameter(0);
     q1[i] = gr2->GetFunction("pol1")->GetParameter(1);
     hxerr0[i] = gr2->GetFunction("pol1")->GetParError(0);
     hxerr1[i] = gr2->GetFunction("pol1")->GetParError(1);
-    // cout << q0[i] << endl;
+    // cout << " harp fit " <<  q0[i] << " " <<  q1[i] << endl;
     
    //  bpmAx[i] = (q1[i] * (bpmAz - hAz[i])) + hAx[i] ;
     //    bpmBx[i] = hBx[i] + (q1[i] * (bpmBz - hBz[i])) ;
@@ -448,13 +382,11 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     bpmAxErr[i] = sqrt(hxerr1[i]*hxerr1[i]*bpmAz*bpmAz + hxerr0[i]*hxerr0[i]) ;
     bpmCx[i] = (q1[i] * bpmCz ) + q0[i] ;
     bpmCxErr[i] = sqrt(hxerr1[i]*hxerr1[i]*bpmCz*bpmCz + hxerr0[i]*hxerr0[i]) ;
-    cout << "check here for archive and epics variable comparison "<< endl;
-    cout << bpmBx[i] << " :: " <<  bpmBx1[i] << endl;
-    // cout << bpmBy[i] << " :: " <<  bpmBy1[i] << endl;
-    // cout << bpmBy[i] << " :: " << bpmBy1[i] << endl;
-    
+    cout << shms_run_NUM[i] << " " << bpmAx[i]  << " "<< bpmAxposmeanc[i]  << " " << bpmAx1[i]
+<< " " << bpmBx[i]  << " " << bpmBxposmeanc[i]  << " " << bpmBx1[i]
+	 << " " << bpmCx[i]  << " "<< bpmCxposmeanc[i]  << " " << bpmCx1[i] << endl;
   }
-  
+  cout << " harp Y fit " << endl;
   for (Int_t i =0; i<hAy.size();i++){
     chy->cd(i+1);
     Double_t hy1[2] = {hAy[i],hBy[i]} ;
@@ -468,14 +400,14 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     TGraphErrors *gr2y = new TGraphErrors(2,&hz1[0],&hy1[0],&err[0],&herr[0]);
     gr2y->SetTitle("HAY vs HAZ ; HARP Z  ; HARP Y");
     gr2y->GetXaxis()->SetLimits(0.0,500.0);
-    gr2y->GetYaxis()->SetRangeUser(-3.0,3.0);
+    gr2y->GetYaxis()->SetRangeUser(hmin,hmax);
     gr2y->GetXaxis()->CenterTitle();
     gr2y->GetYaxis()->CenterTitle();
     gr2y->SetMarkerSize(0.95);
     gr2y->SetMarkerStyle(20);
     gr2y->SetMarkerColor(2);
     gr2y->Draw("ape");
-    gr2y->Fit("pol1");
+    gr2y->Fit("pol1","Q");
     q0y[i] = gr2y->GetFunction("pol1")->GetParameter(0);
     q1y[i] = gr2y->GetFunction("pol1")->GetParameter(1);
     hyerr0[i] = gr2y->GetFunction("pol1")->GetParError(0);
@@ -491,13 +423,14 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     bpmAyErr[i] = sqrt(hyerr1[i]*hyerr1[i]*bpmAz*bpmAz + hyerr0[i]*hyerr0[i]) ;
     bpmCy[i] = (q1y[i] * bpmCz ) + q0y[i] ;
     bpmCyErr[i] = sqrt(hyerr1[i]*hyerr1[i]*bpmCz*bpmCz + hyerr0[i]*hyerr0[i]) ;
-    cout << "check here for archive and epics variable comparison "<< endl;
-    cout << bpmBy[i] << " :: " <<  bpmBy1[i] << endl;
     // cout << bpmBy[i] << " :: " <<  bpmBy1[i] << endl;
     // cout << bpmBy[i] << " :: " << bpmBy1[i] << endl;
+   cout << shms_run_NUM[i] << " " << bpmAy[i] << " " << bpmAyposmeanc[i]  << " " << bpmAy1[i]
+<< " " << bpmBy[i] << " " << bpmByposmeanc[i]  << " " << bpmBy1[i]
+	 << " " << bpmCy[i] << " " << bpmCyposmeanc[i]  << " " << bpmCy1[i] << endl;
 
   }
-  
+  /*
   for (Int_t i=0;i<size;i++){
     cout << "Checks on mean values from EPICS vs. archive values" << endl; 
     // cout <<  bpmAx[i] << "bpm Ax true value" << endl;
@@ -509,9 +442,9 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     cout <<  bpmCyposmeanc[i] << "  "<< bpmCy1[i] << endl;
     cout << endl;
   }
+  */
 
-
-    TCanvas *cb = new TCanvas("cb","HARP vs BPM : Hall C", 800, 900);
+    TCanvas *cb = new TCanvas("cb","BPM_HARP vs BPM_EPICS : Hall C", 800, 900);
     //Draw the bpm_measured vs bpm_cal
     cb->Divide(3,2);
 
@@ -527,7 +460,7 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     gr3->SetMarkerStyle(20);
     gr3->SetMarkerColor(2);
     gr3->Draw("ape");
-    gr3->Fit("pol1");
+    gr3->Fit("pol1","Q");
     Double_t bpmBx_p0=gr3->GetFunction("pol1")->GetParameter(0);
     Double_t bpmBx_p1=gr3->GetFunction("pol1")->GetParameter(1);
     Double_t bpmBx_e0=gr3->GetFunction("pol1")->GetParError(0);
@@ -547,7 +480,7 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     gr4->SetMarkerStyle(20);
     gr4->SetMarkerColor(2);
     gr4->Draw("ape");
-    gr4->Fit("pol1");
+    gr4->Fit("pol1","Q");
     Double_t bpmAx_p0=gr4->GetFunction("pol1")->GetParameter(0);
     Double_t bpmAx_p1=gr4->GetFunction("pol1")->GetParameter(1);
     Double_t bpmAx_e0=gr4->GetFunction("pol1")->GetParError(0);
@@ -566,17 +499,20 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     gr5->SetMarkerStyle(20);
     gr5->SetMarkerColor(2);
     gr5->Draw("ape");
-    gr5->Fit("pol1");
+    gr5->Fit("pol1","Q");
     Double_t bpmCx_p0=gr5->GetFunction("pol1")->GetParameter(0);
     Double_t bpmCx_p1=gr5->GetFunction("pol1")->GetParameter(1);
     Double_t bpmCx_e0=gr5->GetFunction("pol1")->GetParError(0);
     Double_t bpmCx_e1=gr5->GetFunction("pol1")->GetParError(1);
    
-    //TCanvas *cby = new TCanvas("cby","HARP vs BPM : Hall C", 800, 900);
+    //TCanvas *cby = new TCanvas("cby","HARPY vs BPMY : Hall C", 800, 900);
     //Draw the bpm_measured vs bpm_cal
     cb->cd(5);   
     //TGraph *gr3 = new TGraph(size,&bpmBx[0],&bpmBx1[0]);
     TGraphErrors *gr6 = new TGraphErrors(size,&bpmByposmeanc[0],&bpmBy[0],&bpmByposmeancErr[0],&bpmByErr[0]);
+    for (Int_t i =0; i<size; i++){
+      cout << " BpmBY = " << bpmBy[i] << " +/- " << bpmByErr[i] << " " << bpmByposmeanc[i] << " +/- " << bpmByposmeancErr[i] << endl;
+    } 
     gr6->SetTitle("BPM B ; BPMBY  EPICS; BPMBY HARP");
     //gr1->GetXaxis()->SetLimits(-0.9,-0.1);
     // gr1->GetYaxis()->SetRangeUser(-0.83,-0.8);
@@ -586,18 +522,21 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     gr6->SetMarkerStyle(20);
     gr6->SetMarkerColor(2);
     gr6->Draw("ape");
-    gr6->Fit("pol1");
-    Double_t bpmBy_p0=gr6->GetFunction("pol1")->GetParameter(0);
-    Double_t bpmBy_p1=gr6->GetFunction("pol1")->GetParameter(1);
-    Double_t bpmBy_e0=gr3->GetFunction("pol1")->GetParError(0);
-    Double_t bpmBy_e1=gr6->GetFunction("pol1")->GetParError(1);
+    TF1 *fpol = new TF1("fpol","[0]+[1]*x",-1.2,1.2);
+    fpol->SetParameter(0,0.);
+    fpol->SetParameter(1,1.);
+    gr6->Fit("fpol","Q");
+    Double_t bpmBy_p0=fpol->GetParameter(0);
+    Double_t bpmBy_p1=fpol->GetParameter(1);
+    Double_t bpmBy_e0=fpol->GetParError(0);
+    Double_t bpmBy_e1=fpol->GetParError(1);
 
     
     //TCanvas *cay = new TCanvas("cay","HARP vs BPM : Hall C", 800, 900);
     //Draw the bpm_measured vs bpm_cal
     cb->cd(4);  
     for (Int_t i =0; i<size; i++){
-	   cout << bpmAy[i] << " +/- " << bpmAyErr[i] << " " << bpmAyposmeanc[i] << " +/- " << bpmAyposmeancErr[i] << endl;
+      cout << " BpmAY = " << bpmAy[i] << " +/- " << bpmAyErr[i] << " " << bpmAyposmeanc[i] << " +/- " << bpmAyposmeancErr[i] << endl;
     } 
     TGraphErrors *gr7 = new TGraphErrors(size,&bpmAyposmeanc[0],&bpmAy[0],&bpmAyposmeancErr[0],&bpmAyErr[0]);
     gr7->SetTitle("BPM A ; BPMAY  EPICS; BPMAY HARP");
@@ -609,16 +548,19 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     gr7->SetMarkerStyle(20);
     gr7->SetMarkerColor(2);
     gr7->Draw("ape");
-    gr7->Fit("pol1");
-    Double_t bpmAy_p0=gr7->GetFunction("pol1")->GetParameter(0);
-    Double_t bpmAy_p1=gr7->GetFunction("pol1")->GetParameter(1);
-    Double_t bpmAy_e0=gr7->GetFunction("pol1")->GetParError(0);
-    Double_t bpmAy_e1=gr7->GetFunction("pol1")->GetParError(1);
+    gr7->Fit("fpol","Q");
+    Double_t bpmAy_p0=fpol->GetParameter(0);
+    Double_t bpmAy_p1=fpol->GetParameter(1);
+    Double_t bpmAy_e0=fpol->GetParError(0);
+    Double_t bpmAy_e1=fpol->GetParError(1);
     
     //TCanvas *ccy = new TCanvas("ccy","HARP vs BPM : Hall C", 800, 900);
     //Draw the bpm_measured vs bpm_cal
     cb->cd(6);   
     TGraphErrors *gr8 = new TGraphErrors(size,&bpmCyposmeanc[0],&bpmCy[0],&bpmCyposmeancErr[0],&bpmCyErr[0]);
+    for (Int_t i =0; i<size; i++){
+      cout << " BpmCY = " << bpmCy[i] << " +/- " << bpmCyErr[i] << " " << bpmCyposmeanc[i] << " +/- " << bpmCyposmeancErr[i] << endl;
+    } 
     gr8->SetTitle("BPM C ; BPMCY  EPICS; BPMCY HARP");
     //gr1->GetXaxis()->SetLimits(-0.9,-0.1);
     // gr1->GetYaxis()->SetRangeUser(-0.83,-0.8);
@@ -628,11 +570,11 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     gr8->SetMarkerStyle(20);
     gr8->SetMarkerColor(2);
     gr8->Draw("ape");
-    gr8->Fit("pol1");
-    Double_t bpmCy_p0=gr8->GetFunction("pol1")->GetParameter(0);
-    Double_t bpmCy_p1=gr8->GetFunction("pol1")->GetParameter(1);
-    Double_t bpmCy_e0=gr8->GetFunction("pol1")->GetParError(0);
-    Double_t bpmCy_e1=gr8->GetFunction("pol1")->GetParError(1);
+    gr8->Fit("fpol","Q");
+    Double_t bpmCy_p0=fpol->GetParameter(0);
+    Double_t bpmCy_p1=fpol->GetParameter(1);
+    Double_t bpmCy_e0=fpol->GetParError(0);
+    Double_t bpmCy_e1=fpol->GetParError(1);
    
  TCanvas *chz = new TCanvas("chz","XPos vs zPos : Hall C", 800, 900);
   chz ->Divide(isize,jsize);
@@ -650,19 +592,19 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     Double_t xxx[3] = {bpmBx_p1*bpmBxposmeanc[i]+bpmBx_p0,bpmAx_p1*bpmAxposmeanc[i]+bpmAx_p0,bpmCx_p1*bpmCxposmeanc[i]+bpmCx_p0};
     Double_t zzz[3] = {bpmBzz[i],bpmAzz[i],bpmCzz[i]};
     TGraphErrors *gr21 = new TGraphErrors(5,&zz[0],&xx[0],&err[0],&herr[0]);
-    gr21->SetTitle("HARP X vs Z ; Z  ; X");
+    gr21->SetTitle("BPM/HARP X vs Z ; Z  ; X");
     gr21->GetXaxis()->SetLimits(0.0,500.0);
-    gr21->GetYaxis()->SetRangeUser(-3.0,3.0);
+    gr21->GetYaxis()->SetRangeUser(hmin,hmax);
     gr21->GetXaxis()->CenterTitle();
     gr21->GetYaxis()->CenterTitle();
     gr21->SetMarkerSize(0.95);
     gr21->SetMarkerStyle(20);
     gr21->SetMarkerColor(2);
     gr21->Draw("ape");
-    gr21->Fit("pol1");
+    gr21->Fit("fpol","Q");
     TGraph *gr211 = new TGraph(3,&zzz[0],&xxx[0]);
     gr211->GetXaxis()->SetLimits(0.0,500.0);
-    gr211->GetYaxis()->SetRangeUser(-3.0,3.0);
+    gr211->GetYaxis()->SetRangeUser(hmin,hmax);
     gr211->GetXaxis()->CenterTitle();
     gr211->GetYaxis()->CenterTitle();
     gr211->SetMarkerSize(0.95);
@@ -682,18 +624,18 @@ bpm_calibration(const char* finname  = "harp_info.txt"){
     TGraphErrors *gr24 = new TGraphErrors(5,&zz[0],&yy[0],&err[0],&herr[0]);
     gr24->SetTitle("HARP Y vs Z ; Z  ; X");
     gr24->GetXaxis()->SetLimits(0.0,500.0);
-    gr24->GetYaxis()->SetRangeUser(-3.0,3.0);
+    gr24->GetYaxis()->SetRangeUser(hmin,hmax);
     gr24->GetXaxis()->CenterTitle();
     gr24->GetYaxis()->CenterTitle();
     gr24->SetMarkerSize(0.95);
     gr24->SetMarkerStyle(20);
     gr24->SetMarkerColor(2);
     gr24->Draw("ape");
-    gr24->Fit("pol1");
+    gr24->Fit("fpol","Q");
     TGraph *gr25 = new TGraph(3,&zzz[0],&yyy[0]);
     gr25->SetTitle("HARP Y vs Z ; Z  ; X");
     gr25->GetXaxis()->SetLimits(0.0,500.0);
-    gr25->GetYaxis()->SetRangeUser(-3.0,3.0);
+    gr25->GetYaxis()->SetRangeUser(hmin,hmax);
     gr25->GetXaxis()->CenterTitle();
     gr25->GetYaxis()->CenterTitle();
     gr25->SetMarkerSize(0.95);
